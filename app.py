@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 import os
 import fitz
 from sentence_transformers import SentenceTransformer, util
-from utils import extract_entities
+from utils import extract_entities, extract_resume_sections, extract_contact_details
 import re
 
 UPLOAD_FOLDER = 'static/uploads'
@@ -47,6 +47,9 @@ def analyze():
     resume_entities = extract_entities(resume_text)
     resume_skills = set(w.lower() for w in resume_entities.get('SKILL', []))
 
+    resume_sections = extract_resume_sections(resume_text)
+    contact_details = extract_contact_details(resume_text)
+
     jd_words = set(re.findall(r'\b\w{4,}\b', job_desc.lower()))
     matched_skills = sorted(jd_words & resume_skills)
     missing_skills = sorted(jd_words - resume_skills)[:10]
@@ -69,7 +72,11 @@ def analyze():
         match_score=match_score,
         matched_skills=matched_skills,
         missing_skills=missing_skills,
-        suggestions=suggestions
+        suggestions=suggestions,
+        resume_skills=resume_sections['skills'],
+        resume_education=resume_sections['education'],
+        resume_experience=resume_sections['experience'],
+        contact=contact_details
     )
 
 if __name__ == '__main__':
